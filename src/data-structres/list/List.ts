@@ -101,6 +101,28 @@ export default class List<T> {
   }
 
   /**
+   * Gets the data of an element depending on the given condition
+   * @param {function(data: T): boolean} callback A callback that returns the condition
+   * @returns {T | undefined} The data of the element
+   */
+  public where(callback: Function): T | undefined {
+    let tmpNode: ListNode<T> | null = this.head;
+
+    while (tmpNode !== null) {
+      let res: boolean = callback(tmpNode.data);
+      if (res) break;
+      tmpNode = tmpNode.next;
+    }
+
+    if (!tmpNode) {
+      console.log('Element not found');
+      return void 0;
+    }
+
+    return tmpNode?.data;
+  }
+
+  /**
    * Determines if a givien position is no valid
    * @param {number} position Positive integer representing the position
    * @returns {boolean} A boolean determining if the given position is not valid
