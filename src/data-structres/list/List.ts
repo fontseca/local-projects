@@ -102,10 +102,10 @@ export default class List<T> {
 
   /**
    * Gets the data of an element depending on the given condition
-   * @param {function(data: T): boolean} callback A callback that returns the condition
+   * @param callback A callback that returns the condition
    * @returns {T | undefined} The data of the element
    */
-  public where(callback: Function): T | undefined {
+  public where(callback: (data: T) => boolean): T | undefined {
     let tmpNode: ListNode<T> | null = this.head;
 
     while (tmpNode !== null) {
