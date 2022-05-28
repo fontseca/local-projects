@@ -1,63 +1,119 @@
-import { v4 } from 'uuid';
-import { Identifier } from '../../common/types';
-
 class ListNode<T> {
-  public identifier: Identifier = v4();
   public next: ListNode<T> | null = null;
   public prev: ListNode<T> | null = null;
-  public children: Array<T> | null = null;
+  public data: T;
+
+  constructor(data: T) {
+    this.data = data;
+  }
 }
 
-class List<T> {
-  private tail: ListNode<T> | null = null;
+export default class List<T> {
+  private head: ListNode<T> | null = null;
+  private size: number = 0;
 
-  public insertNode(): Identifier {
-    const newNode: ListNode<T> = new ListNode<T>();
+  /**
+   * Inserts a new node at the beginning of the list
+   * @param {T} data Data of the node to insert
+   */
+  public insertAtStart(data: T): void {
+    const newNode = new ListNode<T>(data);
 
-    /* If first node */
-    if (this.tail === null) {
-      this.tail = newNode;
-    } else {
-      this.tail.next = newNode;
-      newNode.prev = this.tail;
-      this.tail = newNode;
+    // If first node
+    if (this.head == null) {
+      this.head = newNode;
+      this.size++;
+      return;
     }
 
-    return newNode.identifier;
+    newNode.next = this.head;
+    this.head.prev = newNode;
+    this.head = newNode;
+    this.size++;
   }
 
-  public insertChildIntoNode(identifier: Identifier, child: T): void | null {
-    let tmpNode: ListNode<T> | null = this.tail;
-    let nodeDoInsertChil: ListNode<T> | null = null;
-
-    /* Try to find node to insert child */
-    while (tmpNode! !== null) {
-      if (tmpNode?.identifier === identifier) {
-        nodeDoInsertChil = tmpNode;
-        break;
-      }
-      tmpNode = tmpNode!.prev;
-    }
-
-    /* Node not found */
-    if (!nodeDoInsertChil) return null;
+  /**
+   * Inserts a new node at the end of the list
+   * @param {T} data Data of the node to insert
+   */
+  public insertAtEnd(data: T): void {
+    const newNode = new ListNode<T>(data);
 
     /* If first node */
-    if (nodeDoInsertChil.children === null) {
-      nodeDoInsertChil.children = Array<T>();
+    if (this.head == null) {
+      this.head = newNode;
+      this.size++;
+      return;
     }
 
-    nodeDoInsertChil.children.push(child);
+    const lastNode: ListNode<T> | null = this.elementAt(this.size);
+    newNode.prev = lastNode;
+    lastNode!.next = newNode;
+    this.size++;
   }
 
-  public getEntries(): void {
-    let tmpNode: ListNode<T> | null = this.tail;
+  /**
+   * Gets the element at a given position
+   * @param {number} position The position of the element
+   * @returns {ListNode<T>} The element at the given position
+   */
+  public elementAt(position: number): ListNode<T> | null {
+    if (this.isEmpty()) {
+      console.error('Error: List is empty');
+      return this.head;
+    }
+
+    if (this.isInvalidPosition(position)) {
+      console.error(
+        `Error: Position '${position}' is out of range 1..${this.size}`
+      );
+      return this.head;
+    }
+
+    let tmpNode: ListNode<T> | null = this.head;
+    for (let i = 1; i < position; ++i) tmpNode = tmpNode!.next;
+    return tmpNode;
+  }
+
+  /**
+   * Determines if the list is empty
+   * @returns {boolean}
+   */
+  public isEmpty(): boolean {
+    return this.size === 0;
+  }
+
+  /**
+   * Gets all the elements of the list in an array
+   * @returns {Array<T>} Array of elements
+   */
+  public entries(): Array<T> {
+    let tmpNode: ListNode<T> | null = this.head;
+    let entries = new Array<T>();
+
     /* Try to find node to insert child */
     while (tmpNode !== null) {
-      console.log(tmpNode);
-      tmpNode = tmpNode!.prev;
+      entries.push(tmpNode.data);
+      tmpNode = tmpNode.next;
     }
+
+    return entries;
+  }
+
+  /**
+   * Gets the number of elements on the list
+   * @returns {number} The size
+   */
+  public count(): number {
+    return this.size;
+  }
+
+  /**
+   * Determines if a givien position is no valid
+   * @param {number} position Positive integer representing the position
+   * @returns {boolean} A boolean determining if the given position is not valid
+   */
+  private isInvalidPosition(position: number): boolean {
+    return position < 1 || position > this.size;
   }
 }
-
-export default List;
