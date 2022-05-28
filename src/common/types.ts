@@ -1,1 +1,1 @@
-export type Identifier = string;
+export type Hash = string;
