@@ -1,12 +1,4 @@
-class ListNode<T> {
-  public next: ListNode<T> | null = null;
-  public prev: ListNode<T> | null = null;
-  public data: T;
-
-  constructor(data: T) {
-    this.data = data;
-  }
-}
+import ListNode from './ListNode';
 
 export default class List<T> {
   private head: ListNode<T> | null = null;
