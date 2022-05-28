@@ -1,11 +1,11 @@
 import { v4 } from 'uuid';
-import { Identifier } from '../../common/types';
+import { Hash } from '../../common/types';
 
 class Tree {
   private parent: Tree | null = null;
   private children: Array<Tree> = new Array<Tree>();
 
-  private identifier: Identifier = v4();
+  private hash: Hash = v4();
   private title: string = 'Untitled';
   private content: string = '';
 
@@ -17,8 +17,8 @@ class Tree {
     this.title = title;
   }
 
-  public getIdentifier(): string {
-    return this.identifier;
+  public getHash(): string {
+    return this.hash;
   }
 
   public setParent(parent: Tree): void {
