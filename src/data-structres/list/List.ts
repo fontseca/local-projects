@@ -5,8 +5,8 @@ export default class List<T> {
   private size: number = 0;
 
   /**
-   * Inserts a new node at the beginning of the list
-   * @param {T} data Data of the node to insert
+   * Inserts a new element at the beginning of the list
+   * @param {T} data Data of the element to insert
    */
   public insertAtStart(data: T): void {
     const newNode = new ListNode<T>(data);
@@ -25,8 +25,8 @@ export default class List<T> {
   }
 
   /**
-   * Inserts a new node at the end of the list
-   * @param {T} data Data of the node to insert
+   * Inserts a new element at the end of the list
+   * @param {T} data Data of the element to insert
    */
   public insertAtEnd(data: T): void {
     const newNode = new ListNode<T>(data);
