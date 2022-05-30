@@ -1,12 +1,46 @@
 import { Hash } from '../../common/types';
-import { List } from '../../data-structres';
+import { PerpetualList } from '../../data-structres';
 import { Chapter, Character } from './classes';
 import Scene from './classes/Scene';
+import path from 'path';
+import fs from 'fs';
+
+/**
+ * Interface to represent
+ * the configuration object
+ * when creating a new novel
+ */
+interface INovelConfig {
+  title: string;
+  path: string;
+}
 
 export default class Novel {
   private title: string = 'Untitled';
   private characters: Array<Character> = new Array<Character>();
-  private chapters: List<Chapter> = new List<Chapter>();
+  private chapters: PerpetualList<Chapter>;
+  private path: string;
+
+  /**
+   * Opens a existing novel or creates it if it does not exist
+   * @param {INovelConfig} config Configuration object for the novel
+   */
+  constructor(config: INovelConfig) {
+    this.path = path.resolve(path.join(config.path, config.title));
+    const infoFilePath = path.join(this.path, '.novel');
+
+    // If the novel does not exist in the given path, then create it
+    if (!this.exists(this.path)) fs.mkdirSync(this.path);
+
+    // If novel info file does not exist, create it
+    if (!this.exists(infoFilePath))
+      fs.writeFileSync(infoFilePath, `${config.title}\n${this.path}`);
+
+    this.title = this.getTitle();
+
+    // Create the list of chapters inside of novel dir
+    this.chapters = new PerpetualList('chapters', this.path);
+  }
 
   /**
    * Adds a new chapters to the list
@@ -16,7 +50,7 @@ export default class Novel {
   public addChapter(title: string): Hash {
     const ch: Chapter = new Chapter();
     ch.setTitle(title);
-    this.chapters.insertAtEnd(ch);
+    this.chapters.insertAtStart(ch);
     return ch.getHash();
   }
 
@@ -26,35 +60,45 @@ export default class Novel {
    * @param {string} content The content of the new scene
    * @returns {Hash} The hash of the created scene
    */
-  public addScene(hash: Hash, content: string): Hash {
-    if (!this.chapters.count())
-      throw 'Error: This novel does not have chapters';
+  // public addScene(hash: Hash, content: string): Hash {
+  //   if (!this.chapters.count())
+  //     throw 'Error: This novel does not have chapters';
 
-    const sc: Scene = new Scene();
+  //   const sc: Scene = new Scene();
 
-    /* Get the chapter by its hash */
-    const ch = this.chapters.where((c) => c.getHash() === hash);
+  //   /* Get the chapter by its hash */
+  //   // const ch = this.chapters.where((c) => c.getHash() === hash);
 
-    sc.appendContent(content);
-    ch?.scenes.insertAtEnd(sc);
+  //   sc.appendContent(content);
+  //   // ch?.scenes.insertAtEnd(sc);
 
-    return sc.getHash();
-  }
+  //   return sc.getHash();
+  // }
 
   /**
    * Gets an array of all chapters of the novel
    * @returns {Array<Chapter>} The chapters
    */
-  public chapterEntries(): Array<Chapter> {
-    return this.chapters.entries();
-  }
+  // public chapterEntries(): Array<Chapter> {
+  // return this.chapters.entries();
+  // }
 
   /**
    * Gets the title of the novel
    * @returns {string}
    */
   public getTitle(): string {
-    return this.title;
+    const filePath: string = path.join(this.path, '.novel');
+    if (!this.exists(filePath))
+      throw Error(`File '.novel' does not exist inside`);
+    const data: Buffer = fs.readFileSync(filePath);
+    const lines: Array<string> = data.toString().split('\n');
+    const pureLines: Array<string> = new Array<string>();
+    const getPureLines = (l: string) =>
+      /[\s]/.test(l.trim()) && pureLines.push(l.trim());
+    // Select only lines that contain info about the novel
+    lines.forEach(getPureLines);
+    return pureLines[0];
   }
 
   /**
@@ -63,5 +107,13 @@ export default class Novel {
    */
   public setTitle(title: string): void {
     this.title = title;
+  }
+
+  /**
+   * Determines if a given path exists
+   * @param {string} path
+   */
+  private exists(path: string): boolean {
+    return fs.existsSync(path);
   }
 }
