@@ -11,6 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@types/node": "^17.0.36",
     "steno": "^2.1.0",
     "uuid": "^8.3.2"
   },
