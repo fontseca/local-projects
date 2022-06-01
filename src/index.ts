@@ -6,7 +6,7 @@ try {
     path: './files',
   });
 
-  console.log(novel);
+  novel.addChapter('ch1');
 } catch (err) {
   console.error(err);
 }
