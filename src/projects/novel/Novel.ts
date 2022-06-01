@@ -4,6 +4,7 @@ import { Chapter, Character } from './classes';
 import Scene from './classes/Scene';
 import path from 'path';
 import fs from 'fs';
+import Perpetual from '../../data-structres/abstract/Perpetual';
 
 /**
  * Interface to represent
@@ -15,7 +16,7 @@ interface INovelConfig {
   path: string;
 }
 
-export default class Novel {
+export default class Novel extends Perpetual {
   private title: string = 'Untitled';
   private characters: Array<Character> = new Array<Character>();
   private chapters: PerpetualList<Chapter>;
@@ -26,6 +27,7 @@ export default class Novel {
    * @param {INovelConfig} config Configuration object for the novel
    */
   constructor(config: INovelConfig) {
+    super();
     this.path = path.resolve(path.join(config.path, config.title));
     const infoFilePath = path.join(this.path, '.novel');
 
@@ -50,7 +52,9 @@ export default class Novel {
   public addChapter(title: string): Hash {
     const ch: Chapter = new Chapter();
     ch.setTitle(title);
-    this.chapters.insertAtStart(ch);
+    this.chapters.insertAtEnd(ch);
+    console.log(this.chapters.entries());
+
     return ch.getHash();
   }
 
@@ -107,13 +111,5 @@ export default class Novel {
    */
   public setTitle(title: string): void {
     this.title = title;
-  }
-
-  /**
-   * Determines if a given path exists
-   * @param {string} path
-   */
-  private exists(path: string): boolean {
-    return fs.existsSync(path);
   }
 }
