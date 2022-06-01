@@ -1,6 +1,7 @@
 import fs, { readFileSync, writeFileSync } from 'fs';
 import path from 'path';
 import { Address } from '../../common/types';
+import Perpetual from '../abstract/Perpetual';
 import PerpetualListNode from './PerpetualListNode';
 
 /**
@@ -8,16 +9,13 @@ import PerpetualListNode from './PerpetualListNode';
  */
 export default class PerpetualList<T> {
   private location: string;
-  private name: string;
-
   /**
    * Crates a new perpetual list
    * @param {string} name The name of the list
    * @param {string} location The path where the list will be stored
    */
   constructor(name: string, location: string) {
-    this.name = name;
-    this.location = path.join(path.resolve(location), this.name);
+    this.location = path.join(path.resolve(location), name);
     const headPath: string = path.join(this.location, 'HEAD');
     const infoPath: string = path.join(this.location, '.list');
     const objDir: string = path.join(this.location, 'objects');
@@ -44,8 +42,9 @@ export default class PerpetualList<T> {
       this.increaseSize();
       return;
     }
-    newNode.setNext(this.getHead());
-    this.setPreviousNode(newNode.getAddress());
+
+    this.setNextNodeOf(newNode.getAddress(), this.getHead());
+    this.setPreviousNodeOf(this.getHead(), newNode.getAddress());
     this.setHead(newNode.getAddress());
     this.increaseSize();
   }
@@ -54,44 +53,57 @@ export default class PerpetualList<T> {
    * Inserts a new element at the end of the list
    * @param {T} data Data of the element to insert
    */
-  // public insertAtEnd(data: T): void {
-  //   const newNode = new ListNode<T>(data);
-
-  //   /* If first node */
-  //   if (this.head == null) {
-  //     this.head = newNode;
-  //     this.size++;
-  //     return;
-  //   }
-
-  //   const lastNode: ListNode<T> | null = this.elementAt(this.size);
-  //   newNode.prev = lastNode;
-  //   lastNode!.next = newNode;
-  //   this.size++;
-  // }
+  public insertAtEnd(data: T): void {
+    const newNode = new PerpetualListNode<T>(this.location, data);
+    /* When first node */
+    if (this.getHead() == null) {
+      this.setHead(newNode.getAddress());
+      this.increaseSize();
+      return;
+    }
+    const lastNodeAddress = this.elementAt(this.count());
+    console.log('Last node address: ' + lastNodeAddress);
+    this.setPreviousNodeOf(newNode.getAddress(), lastNodeAddress);
+    this.setNextNodeOf(lastNodeAddress, newNode.getAddress());
+    this.increaseSize();
+  }
 
   /**
    * Gets the element at a given position
    * @param {number} position The position of the element
    * @returns {ListNode<T>} The element at the given position
    */
-  // public elementAt(position: number): ListNode<T> | null {
-  //   if (this.isEmpty()) {
-  //     console.error('Error: List is empty');
-  //     return this.head;
-  //   }
+  public elementAt(position: number): Address | null {
+    if (this.isEmpty()) {
+      console.error('Error: List is empty');
+      return null;
+    }
 
-  //   if (this.isInvalidPosition(position)) {
-  //     console.error(
-  //       `Error: Position '${position}' is out of range 1..${this.size}`
-  //     );
-  //     return this.head;
-  //   }
+    if (this.isInvalidPosition(position)) {
+      console.error(
+        `Error: Position '${position}' is out of range 1..${this.count()}`
+      );
+      return null;
+    }
 
-  //   let tmpNode: ListNode<T> | null = this.head;
-  //   for (let i = 1; i < position; ++i) tmpNode = tmpNode!.next;
-  //   return tmpNode;
-  // }
+    let tmpAddress = this.getHead();
+    for (let i = 1; i < position; ++i)
+      tmpAddress = this.getNextElementOf(tmpAddress);
+    return tmpAddress;
+  }
+
+  /**
+   * Gets the address of the next element of a given node
+   * @param {Address} address The address of the next element
+   */
+  private getNextElementOf(current: Address): Address | null {
+    const objects = path.join(this.getLocation(), 'objects');
+    if (!current) return null;
+    const node = path.join(objects, current);
+    const buff: Buffer = readFileSync(node);
+    const data: Array<string> = buff.toString().split('\n');
+    return data[1] === 'NULL' ? null : data[1];
+  }
 
   /**
    * Determines if the list is empty
@@ -103,20 +115,18 @@ export default class PerpetualList<T> {
 
   /**
    * Gets all the elements of the list in an array
-   * @returns {Array<T>} Array of elements
+   * @returns {Array<Address>} Array of elements
    */
-  // public entries(): Array<T> {
-  //   let tmpNode: ListNode<T> | null = this.head;
-  //   let entries = new Array<T>();
+  public entries(): Array<Address> {
+    let tmpNode: Address = this.getHead();
+    let entries = new Array<Address>();
+    while (tmpNode !== null) {
+      entries.push(tmpNode);
+      tmpNode = this.getNextElementOf(tmpNode);
+    }
 
-  //   /* Try to find node to insert child */
-  //   while (tmpNode !== null) {
-  //     entries.push(tmpNode.data);
-  //     // tmpNode = tmpNode.next;
-  //   }
-
-  //   return entries;
-  // }
+    return entries;
+  }
 
   /**
    * Gets the number of elements on the list
@@ -139,28 +149,6 @@ export default class PerpetualList<T> {
     infoLines[2] = currentSize + 1 + '';
     this.writeInformationFile(infoLines);
   }
-
-  /**
-   * Gets the data of an element depending on the given condition
-   * @param callback A callback that returns the condition
-   * @returns {T | undefined} The data of the element
-   */
-  // public where(callback: (data: T) => boolean): T | undefined {
-  //   let tmpNode: ListNode<T> | null = this.head;
-
-  //   while (tmpNode !== null) {
-  //     let res: boolean = callback(tmpNode.data);
-  //     if (res) break;
-  //     // tmpNode = tmpNode.next;
-  //   }
-
-  //   if (!tmpNode) {
-  //     console.log('Element not found');
-  //     return void 0;
-  //   }
-
-  //   return tmpNode?.data;
-  // }
 
   /**
    * Determines if a givien position is no valid
@@ -186,6 +174,44 @@ export default class PerpetualList<T> {
   }
 
   /**
+   * Writes the list's name in the .list file
+   * @param {string} name The new name of the list
+   */
+  public setName(name: string): void {
+    const info: Array<string> = this.readInformationFile();
+    console.log(info);
+    info[0] = name;
+
+    this.writeInformationFile(info);
+  }
+
+  /**
+   * Gets the name of the current list
+   * @returns {string} The name of the list
+   */
+  public getName(): string {
+    return this.readInformationFile()[0];
+  }
+
+  /**
+   * Writes the location of the list into the .list file
+   * @param {string} location The location of the list
+   */
+  private setLocation(location: string): void {
+    const info: Array<string> = this.readInformationFile();
+    info[1] = location;
+    this.writeInformationFile(info);
+  }
+
+  /**
+   * Reads the location of the current list
+   * @returns {string} The location of the list
+   */
+  private getLocation(): string {
+    return this.readInformationFile()[1];
+  }
+
+  /**
    * Changes the head of the list
    * @param {Address} newHead New head node
    */
@@ -197,27 +223,38 @@ export default class PerpetualList<T> {
   /**
    * Sets the previous node of the current head
    * @param {Address} prev Previous node
+   /**
+   * Sets the previous node of a given node
+   * @param {Address} current The address of the current node
+   * @param {Address} prev The address of the node to set as the previous of current node
+   * @returns
    */
-  private setPreviousNode(prev: Address): void {
-    const headNodePath: string = path.join(
-      this.location,
-      'objects',
-      this.getHead()!.toString()
-    );
-    const buff: Buffer = readFileSync(headNodePath);
+  private setPreviousNodeOf(current: Address, prev: Address): void {
+    if (!current) return;
+    const node: string = path.join(this.location, 'objects', current);
+    const buff: Buffer = readFileSync(node);
     const lines: Array<Address> = buff.toString().split('\n');
     lines[0] = prev;
     let content: string = '';
     lines.forEach((l) => (content += l + '\n'));
-    writeFileSync(headNodePath, content);
+    writeFileSync(node, content);
   }
 
   /**
-   * Determines if a given path exists
-   * @param {string} path
+   * Sets the next node of a node
+   * @param {Address} current The address of the current node
+   * @param {Address} next The address of the node to set as the next of current
+   * @returns
    */
-  private exists(path: string): boolean {
-    return fs.existsSync(path);
+  private setNextNodeOf(current: Address, next: Address): void {
+    if (!current) return;
+    const curr: string = path.join(this.location, 'objects', current);
+    const buff: Buffer = readFileSync(curr);
+    const lines: Array<Address> = buff.toString().split('\n');
+    lines[1] = next;
+    let content: string = '';
+    lines.forEach((l) => (content += l + '\n'));
+    writeFileSync(curr, content);
   }
 
   /**
@@ -244,5 +281,13 @@ export default class PerpetualList<T> {
     let cont: string = '';
     changes.forEach((change) => (cont += change + '\n'));
     writeFileSync(info, cont);
+  }
+
+  /**
+   * Determines if a given path exists
+   * @param {string} path
+   */
+  public exists(path: string): boolean {
+    return fs.existsSync(path);
   }
 }
