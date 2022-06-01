@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from 'fs';
+import { writeFileSync } from 'fs';
 import path from 'path';
 import { Address } from '../../common/types';
 import Malloc from '../../helpers/malloc';
@@ -19,14 +19,5 @@ export default class PerpetualListNode<T> {
 
   public getAddress(): Address {
     return this.address;
-  }
-
-  public setNext(next: Address): void {
-    const buff: Buffer = readFileSync(this.nodePath);
-    const lines: Array<Address> = buff.toString().split('\n');
-    lines[1] = next;
-    let cont = '';
-    lines.forEach((l) => (cont += l + '\n'));
-    writeFileSync(this.nodePath, cont);
   }
 }
