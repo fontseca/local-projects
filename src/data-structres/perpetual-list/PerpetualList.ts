@@ -1,7 +1,6 @@
 import fs, { readFileSync, writeFileSync } from 'fs';
 import path from 'path';
 import { Address } from '../../common/types';
-import Perpetual from '../abstract/Perpetual';
 import PerpetualListNode from './PerpetualListNode';
 
 /**
