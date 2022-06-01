@@ -127,7 +127,7 @@ export default class PerpetualList<T> {
     const size: any = infoData[2];
     if (typeof Number(size) !== 'number' || Number.isNaN(Number(size)))
       throw Error("'.list' has been corrupted");
-    return Number(infoData[1]);
+    return Number(size);
   }
 
   /**
